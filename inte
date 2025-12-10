@@ -1,0 +1,192 @@
+Version V47.09
+===========================================================================================
+Se actualiza el descriptor de la version V47.09 Build 1
+BuildVersion          "1"
+DSC:16:1 (lib:VersionCorreo)
+DSC:16:49 (lib:BuildVersion)
+-------------------------------------------------------------------------------------------
+06/10/2025 Integrado por Gabriel
+Modificaciones de Florencia Marcó
+Se corrige error en IRP
+Servicio: falta mostrar destino y rango
+Opcionales: falta mostrar monto de VADC y CREM
+BuildVersion          "2"
+DSC:16:49 (lib:BuildVersion)
+OFB:35:820 (post:CDSUpdate_ImpreTmp)
+-------------------------------------------------------------------------------------------
+07/10/2025 Integrado por Gabriel
+Modificaciones de Florencia Marcó
+(GDLD-1117 )Se solicita que las Unidades Postales puedan pagar en la Sucursal con tarjeta de DEBITO
+y por medio de QR solo con DEBITO y por transferencias.
+Se indica que el control del medio de pago utilizado cuando usan QR no es posible realizarlo.
+BuildVersion          "4"
+DSC:16:49 (lib:BuildVersion)
+FLD:35:5690 (post:adt_tpos_tipo_tarj)
+OFB:35:4269 (post:FVALMedio_Pago)
+OFB:35:10195 (post:MISCparametriaPOS)
+-------------------------------------------------------------------------------------------
+21/10/2025 Integrado por Gabriel
+Modificaciones de Florencia Marcó
+Se debe eliminar el botón de la TX de Cierre de Lote del menú correspondiente a Caja/ Actividades Varias.
+Esta TX se realiza de forma manual en el POINT. No se realiza a través de la API, por lo tanto no se debe disparar desde Mosaic.
+BuildVersion          "5"
+DSC:16:49 (lib:BuildVersion)
+LST:35:447 (post:MENUact_varias)
+-------------------------------------------------------------------------------------------
+21/10/2025 Integrado por Gabriel
+Modificaciones de Florencia Marcó
+SM Point - Se debe eliminar el paso correspondiente al cierre de Lote del Cierre de Caja.
+BuildVersion          "6"
+DSC:16:49 (lib:BuildVersion)
+OFB:34:1607 (tes:TRANProcesoCierre)
+OFB:34:1773 (tes:MISCtitulos)
+OFB:34:1824 (tes:CDSProximo_Estado)
+OFB:34:1603 (tes:TRANProcesoCierre)
+OFB:34:1769 (tes:MISCtitulos)
+OFB:34:1820 (tes:CDSProximo_Estado)
+-------------------------------------------------------------------------------------------
+23/10/2025 Integrado por Gabriel
+Modificaciones de Florencia Marcó
+Se deben eliminar las validaciones , controles y alertas en la anulación de documentos,
+apertura de caja / sucursal o apertura del día correspondientes a cierres de lotes pendientes.
+Se elimina controles y alerta a operador por falta de cierre de lote.
+BuildVersion          "7"
+DSC:16:49 (lib:BuildVersion)
+OFB:26:209 (siaf:MISCopen_day_tlr)
+OFB:34:697 (tes:PRETcierre_suc)
+OFB:35:10239 (post:MISCver_LoteCie_pend)
+-------------------------------------------------------------------------------------------
+30/10/2025 Integrado por Gabriel
+Modificaciones de Florencia Marcó
+Se solicita modificacion en el IRP para identificar con una P a los PYMES en el encabezado.
+para los corpo se seguira mostrando una X
+BuildVersion          "8"
+DSC:16:49 (lib:BuildVersion)
+OFB:35:2699 (post:PRTencabe_irp)
+-------------------------------------------------------------------------------------------
+31/10/2025 Integrado por Gabriel
+Modificaciones de Florencia Marcó
+1) Se vuelve a journalizar en la TX 95010 el campo post:adt_stockp_TT_giros [x] para que la interfaz
+procese la tx. se realizaron pruebas y si se envía vacío la interfaz lo acepta.
+2) Se solicita que en el IRP se identifiquen los clientes Pymes con una P en el encabezado.
+Se integra desarrollo para la Reimpresion de IRP
+BuildVersion          "9"
+DSC:16:49 (lib:BuildVersion)
+LST:35:1548 (post:LIST95010_flds_jnl)
+OFB:35:1359 (post:JNLimpre_fiscal)
+OFB:35:1362 (post:JNLgral)
+OFB:35:2699 (post:PRTencabe_irp)
+OFB:35:1354 (post:JNLimpre_fiscal)
+OFB:35:1357 (post:JNLgral)
+-------------------------------------------------------------------------------------------
+03/11/2025 Integrado por Gabriel
+Modificaciones de Florencia Marcó
+Reimpresion Label Corpo Pymes
+BuildVersion          "10"
+DSC:16:49 (lib:BuildVersion)
+OFB:29:156 (tlr:tlr_fb4)
+OFB:35:799 (post:CDSgral_append)
+OFB:35:1362 (post:JNLgral)
+OFB:29:124 (tlr:tlr_fb4)
+-------------------------------------------------------------------------------------------
+10/11/2025 Integrado por Gabriel
+Modificaciones de Florencia Marcó
+Se crean campos para identificar tipo y nro. de serie de la terminal Smart Point
+FLD:35:5691 (post:adt_tmp_term_type)
+FLD:35:5692 (post:adt_tmp_dev_serial)
+-------------------------------------------------------------------------------------------
+17/11/2025 Integrado por Gabriel
+Modificaciones de Nahuel Martinez
+Cambio hacia el uso de Smart Point para medio de pago:
+ - Se modifica la pantalla de compra, para retirar el uso del mail e indicar orden de pago en lugar de orden de cobro;
+ - Se da de alta el nuevo BIN para Smart Point;
+ - Se actualiza el mensaje del campo 109 para iniciar la nueva orden mediante el uso del Smart Point;
+ - Se agrega el uso de los campos "post:adt_tmp_term_type" y "post:adt_tmp_dev_serial" para armar el Terminal_ID en base a lo leído de la tabla "Terminal_MP"
+BuildVersion          "11"
+DSC:16:49 (lib:BuildVersion)
+SCR:35:518 (post:SCRNmpPurchase)
+OFB:35:10288 (post:SENDconsulta_mp)
+OFB:35:10303 (post:PRESmpPurchase)
+-------------------------------------------------------------------------------------------
+17/11/2025 Integrado por Gabriel
+Modificaciones de Florencia Marcó
+Se solicita incorporacion de dos nuevos T&T:
+HX con la misma info de EO
+HO con la misma info de CO
+Se realizan las modificaciones en el código.
+BuildVersion          "12"
+DSC:16:49 (lib:BuildVersion)
+OFB:35:2928 (post:FVALstockp_pieza)
+OFB:35:2930 (post:FVALcamposrequeridos)
+OFB:35:6379 (post:MISCvalida_pieza)
+OFB:35:7068 (post:PBagreg_ModifPieza)
+OFB:35:7069 (post:PBmodif_ModifPieza)
+OFB:35:7070 (post:PBagreg_ModifPieza)
+-------------------------------------------------------------------------------------------
+25/11/2025 Integrado por Gabriel
+Modificaciones de Florencia Marcó
+BuildVersion          "13"
+IRP: se vuelve atras el cambio de poner la  P por X en el IRP de corpo pymes
+DSC:16:49 (lib:BuildVersion)
+OFB:35:2699 (post:PRTencabe_irp)
+-------------------------------------------------------------------------------------------
+27/11/2025 Integrado por Gabriel
+Modificaciones de Florencia Marcó
+Se requiere sobre el reporte RENDICION DE CONTRA REEMBOLSO que se imprime en las transacciones
+LIQUIDACION CONTRAREEMBOLSO y LIQUIDACION CONTRAREEMBOLSO SIN CONEXIÓN lo siguiente:
+1. Se debe generar un solo ejemplar a hoja completa (eliminar actual duplicado doble).
+No debe tener ninguna referencia de destinatario ya sea para cliente, sucursal y/o administración.
+BuildVersion          "14"
+DSC:16:49 (lib:BuildVersion)
+OFB:35:8292 (post:DOCSreportesCREM)
+OFB:35:8293 (post:PRTrendCREM)
+-------------------------------------------------------------------------------------------
+5/12/2025 Integrado por Gabriel
+Modificaciones de Nicolás Lopez
+[SUC-1202] Se realiza modificación dentro de la estructura actual de pago con dispositivo smart point,
+adecuándolo al nuevo servicio.
+BuildVersion          "15"
+DSC:16:49 (lib:BuildVersion)
+FLD:35:5349 (post:mp_tmp_adic)
+FLD:35:5691 (post:adt_tmp_term_type)
+FLD:35:5692 (post:adt_tmp_dev_serial)
+FLD:35:5693 (post:adt_opmp_order_id_PS)
+FLD:35:5694 (post:adt_opmp_pay_id_PS)
+FLD:35:5695 (post:adt_opmp_status_PS)
+FLD:35:5696 (post:adt_opmp_status_p_PS)
+FLD:35:5697 (post:mp_response_PS)
+FLD:35:5698 (post:mp_order_id_PS)
+FLD:35:5699 (post:mp_payment_id_PS)
+FLD:35:5700 (post:mp_status_PS)
+FLD:35:5701 (post:mp_status_pago_PS)
+LST:35:1795 (post:LISTjnl_opmp_order)
+LST:35:1803 (post:LISTset_opmp_order)
+LST:35:1808 (post:LISTget_opmp_order)
+LST:35:1813 (post:LISTmp_screen_status)
+OFB:35:10280 (post:MISCobtengo_mp)
+OFB:35:10287 (post:SENDconsulta_mp)
+OFB:35:10289 (post:RCVEhdr_mp)
+OFB:35:10300 (post:MISCflow_mercadopago)
+OFB:35:10303 (post:SVALmpPurchase)
+OFB:35:10304 (post:MISCmsg_error_mp)
+OFB:35:10306 (post:MISCresponseMP)
+OFB:35:10307 (post:OFBresponse_ws_mp)
+OFB:35:10314 (post:MISCmpGetOrderPoint)
+OFB:35:10318 (post:MISCmpPostOrderPoint)
+OFB:35:10324 (post:CDSopmp_jnlOK)
+SCR:35:518 (post:SCRNmpPurchase)
+LST:35:1793 (post:LISTjnl_opmp_order)
+LST:35:1801 (post:LISTset_opmp_order)
+LST:35:1806 (post:LISTget_opmp_order)
+LST:35:1811 (post:LISTmp_screen_status)
+OFB:35:10281 (post:MISCobtengo_mp)
+OFB:35:10290 (post:RCVEhdr_mp)
+OFB:35:10301 (post:MISCflow_mercadopago)
+OFB:35:10304 (post:SVALmpPurchase)
+OFB:35:10305 (post:MISCmsg_error_mp)
+OFB:35:10307 (post:MISCresponseMP)
+OFB:35:10308 (post:OFBresponse_ws_mp)
+OFB:35:10315 (post:MISCmpGetOrderPoint)
+OFB:35:10319 (post:MISCmpPostOrderPoint)
+OFB:35:10325 (post:CDSopmp_jnlOK)
+-------------------------------------------------------------------------------------------

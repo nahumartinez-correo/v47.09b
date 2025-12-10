@@ -1,0 +1,160 @@
+/****o* Mercado Pago/OFB:post:SVALmpPurchase
+* NOMBRE
+*   OFB:post:SVALmpPurchase
+* DESCRIPCION
+*   Rutina de Confirmacion de la TX de Venta con Tarjeta Mercado Pago
+* ENTRADAS
+*   Par�metros de entrada de la rutina, sean argumentos o campos que tiene en cuenta
+* SALIDAS
+*   Campos modificados como resultado o returns cuyos valores sean no triviales
+* IMPACTOS
+*   Otros objetos que deber�n ser analizados al modificar el objeto actual
+* REFERENCIADO POR
+*   post:MISCflow_mercadopago
+* DOCUMENTACION
+*   NI50546 Mercado Pago 
+* SOURCE
+*/
+#include "postsval.h"
+
+SUB post:SVALmpPurchase
+
+  LOCAL retries LIKE post:cantidad
+	LOCAL max_retries LIKE post:cantidad
+	LOCAL l_retval LIKE lib:err_retval
+  LOCAL msg LIKE common:csr_string
+
+    IF (LASTKEY == RT_PAGEDOWN) THEN
+        RETURN -2
+    END IF
+
+    CLEARFIELD post:mp_response_message
+
+    // Si no existe order_id, creo la Orden
+    IF (post:mp_order_id_PS.NUMCHARS == 0) THEN
+        CALL post:MISCmpPostOrderPoint
+        IF (mp_response_PS == 200 || mp_response_PS == 201)
+            post:mp_msg_guia = "Presione ENTER, luego de realizar el cobro, para finalizar el Presupuesto."
+        ELSE
+            post:mp_msg_guia = "Orden de cobro no generada. Presione ENTER para reintentar o ESC para cancelar."
+        END IF 
+        CALL CSR:proc_list(F_REFRESH, LST:post:LISTmp_screen_status)
+        refresh window
+        RETURN -2
+
+    ELSE
+        // Si ya existe la orden, consulto su estado actual
+        CALL post:MISCmpGetOrderPoint
+        IF (RETVAL < 0) THEN
+            post:mp_msg_guia = "No se pudo consultar la orden. Presione ENTER para reintentar o ESC para cancelar."
+            CALL CSR:proc_list(F_REFRESH, LST:post:LISTmp_screen_status)
+            refresh window
+            RETURN -2
+        END IF
+
+        DPRINT "[DBG] SVALmpPurchase: order_id=[%s] status_pago=[%s]\n" post:mp_order_id_PS post:mp_status_pago_PS
+
+        // Evaluación de estados según momento del flujo
+        SELECT (post:mp_status_pago_PS)
+
+            // ---------- Etapa inicial ----------
+            CASE "created"
+                post:mp_msg_guia = "Orden creada. Realice el cobro en la terminal y presione ENTER para continuar."
+                CALL CSR:proc_list(F_REFRESH, LST:post:LISTmp_screen_status)
+                refresh window
+                RETURN -2
+
+            CASE "expired"
+                CALL post:CDSopmp_jnlFallo("VEN")
+                post:mp_msg_guia = "Orden expirada. Presione ENTER para generar una nueva o ESC para cancelar."
+                CALL CSR:proc_list(F_REFRESH, LST:post:LISTmp_screen_status)
+                refresh window
+                RETURN -2
+
+            CASE "canceled"
+                CALL post:CDSopmp_jnlFallo("VEN")
+                post:mp_msg_guia = "Orden cancelada. ESC para salir."
+                CALL CSR:proc_list(F_REFRESH, LST:post:LISTmp_screen_status)
+                refresh window
+                RETURN -2
+
+            // ---------- Etapa en terminal ----------
+            CASE "at_terminal"
+                LET retries = 5
+                LET max_retries = 1
+                LET l_retval = -4
+                common:sleep_factura = 5
+
+
+                WHILE (retries < max_retries && post:mp_status_pago_PS == "at_terminal")
+                    post:mp_msg_guia = "Procesando... por favor espere."
+                    FPRINT post:mp_msg_guia, "Procesando... por favor espere. Reintento : %d", retries
+                    CALL CSR:proc_list(F_REFRESH, LST:post:LISTmp_screen_status)
+                    refresh window
+
+                    DPRINT "[RETRY] intento=%d status_pago=%s\n" retries post:mp_status_pago_PS
+
+                    CALL post:MISCsleepFactura
+                    CALL post:MISCmpGetOrderPoint
+
+
+                    IF (post:mp_status_pago_PS == "processed" || post:mp_status_pago_PS == "approved")
+                        post:mp_msg_guia = "Pago confirmado correctamente."
+                        CALL CSR:proc_list(F_REFRESH, LST:post:LISTmp_screen_status)
+                        refresh window
+                        RETURN 0
+                    END IF
+
+                    LET retries = retries + 1
+                END WHILE
+
+                IF (l_retval == -4)
+                    MSGBOX "No se obtuvo confirmacion del pago.\n¿Desea volver a intentar?",OFB_YESNO,"ATENCION"
+                    DPRINT "[RETRY] OFB_IDNO=%s\n" OFB_IDNO
+                    IF (RETVAL == OFB_IDNO) THEN
+                    //cancela con esc
+                        CALL post:CDSopmp_jnlFallo("VEN")
+                        LET LASTKEY = RT_ESC
+                        RESETFLAG drv:mode_flags,popup_mode
+                        RETURN 0
+                    ELSE
+                        DPRINT "[RETRY] Usuario eligió volver a intentar.\n"
+                        //Si al reintento, vuelve al popup
+                        RETURN -2  
+                    END IF
+                END IF
+
+            CASE "processed"
+                post:mp_msg_guia = "Pago procesado correctamente."
+                CALL CSR:proc_list(F_REFRESH, LST:post:LISTmp_screen_status)
+                refresh window
+                RETURN 0
+
+            CASE "failed"
+                CALL post:CDSopmp_jnlFallo("VEN")
+                post:mp_msg_guia = "Pago rechazado o fallido. ESC para cancelar."
+                CALL CSR:proc_list(F_REFRESH, LST:post:LISTmp_screen_status)
+                refresh window
+                RETURN -2
+
+            CASE "action_required"
+                post:mp_msg_guia = "Atención: requiere acción manual en la terminal."
+                CALL CSR:proc_list(F_REFRESH, LST:post:LISTmp_screen_status)
+                refresh window
+                RETURN -2
+
+            CASE "refunded"
+                post:mp_msg_guia = "Pago reembolsado. No es posible continuar con esta operación."
+                CALL CSR:proc_list(F_REFRESH, LST:post:LISTmp_screen_status)
+                refresh window
+                RETURN -2
+
+        END SELECT
+    END IF
+
+    CALL CSR:proc_list(F_REFRESH, LST:post:LISTmp_screen_status)
+
+END SUB
+
+
+/*******/

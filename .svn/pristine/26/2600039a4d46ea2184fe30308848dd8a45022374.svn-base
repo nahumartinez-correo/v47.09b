@@ -1,0 +1,47 @@
+/****o* Mercado Pago/OFB:post:MISCresponseMP
+* NOMBRE
+*   OFB:post:MISCresponseMP
+* DESCRIPCION
+*   Captura los datos de Error de respuesta del HOST de Mercado Pago
+* ENTRADAS
+*   Par�metros de entrada de la rutina, sean argumentos o campos que tiene en cuenta
+* SALIDAS
+*   Campos modificados como resultado o returns cuyos valores sean no triviales
+* IMPACTOS
+*   Otros objetos que deber�n ser analizados al modificar el objeto actual
+* REFERENCIADO POR
+*  post:OFBresponse_ws_mp
+* DOCUMENTACION
+*   NI50546 - Mercado Pago
+* SOURCE
+*/
+#include "postmisc.h"
+
+SUB post:MISCresponseMP
+IF (post:adt_tmp_codint_mp == "MPC" || post:adt_tmp_codint_mp == "MPD") THEN
+	post:mp_response_code = SUBSTR(post:mp_tmp_adic[0],0,4)
+	post:mp_response_error = SUBSTR(post:mp_tmp_adic[2],0,100)
+	post:mp_response_message = SUBSTR(post:mp_tmp_adic[3],0,100)
+	post:mp_response_cause = SUBSTR(post:mp_tmp_adic[4],0,100)
+	
+	CALL post:MISCFtrim(post:mp_response_code)
+	CALL post:MISCFtrim(post:mp_response_status)
+	CALL post:MISCFtrim(post:mp_response_error)
+	CALL post:MISCFtrim(post:mp_response_message)
+	CALL post:MISCFtrim(post:mp_response_cause)
+ELSE
+	post:mp_response_code = SUBSTR(post:mp_tmp_adic[0],10,10)
+	post:mp_response_status = SUBSTR(post:mp_tmp_adic[1],0,20)
+	post:mp_response_error = post:mp_tmp_adic[2]
+	post:mp_response_message = post:mp_tmp_adic[3]
+	post:mp_response_cause = post:mp_tmp_adic[4]
+	
+	CALL post:MISCFtrim(post:mp_response_code)
+	CALL post:MISCFtrim(post:mp_response_status)
+	CALL post:MISCFtrim(post:mp_response_error)
+	CALL post:MISCFtrim(post:mp_response_message)
+	CALL post:MISCFtrim(post:mp_response_cause)
+END IF
+END SUB
+
+/*******/
